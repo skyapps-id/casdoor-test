@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: casdoor-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: casdoor
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - casdoor-network
+
+  casdoor:
+    image: casbin/casdoor:latest
+    container_name: casdoor
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    environment:
+      - RUNNING_IN_DOCKER=true
+      - TZ=Asia/Jakarta
+    volumes:
+      - ./conf:/conf
+      - ./logs:/logs
+    networks:
+      - casdoor-network
+
+networks:
+  casdoor-network:
+    driver: bridge
+
