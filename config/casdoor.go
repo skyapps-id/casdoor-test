@@ -1,10 +1,7 @@
 package config
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/casdoor/casdoor-go-sdk/casdoorsdk"
@@ -21,7 +18,7 @@ func InitCasdoor() {
 	redirectURL := "http://localhost:9000/callback"
 
 	// Load certificate
-	certificate := loadCertificate(endpoint, appName)
+	certificate := loadCertificate()
 
 	if certificate != "" {
 		// Initialize dengan certificate untuk JWT verification
@@ -49,9 +46,9 @@ func InitCasdoor() {
 }
 
 // loadCertificate mencoba load certificate dengan berbagai cara
-func loadCertificate(endpoint, appName string) string {
+func loadCertificate() string {
 	// Priority 1: Load dari file cert.pem
-	if certBytes, err := ioutil.ReadFile("./token_jwt_key.pem"); err == nil {
+	if certBytes, err := os.ReadFile("./cert.pem"); err == nil {
 		log.Println("📄 Certificate loaded from cert.pem")
 		return string(certBytes)
 	}
@@ -62,35 +59,5 @@ func loadCertificate(endpoint, appName string) string {
 		return cert
 	}
 
-	// Priority 3: Download dari Casdoor API
-	certUrl := fmt.Sprintf("%s/api/get-app-cert?appName=%s", endpoint, appName)
-
-	resp, err := http.Get(certUrl)
-	if err != nil {
-		log.Printf("⚠️  Failed to download certificate: %v", err)
-		return ""
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		log.Printf("⚠️  Failed to download certificate: HTTP %d", resp.StatusCode)
-		return ""
-	}
-
-	certBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("⚠️  Failed to read certificate response: %v", err)
-		return ""
-	}
-
-	certificate := string(certBytes)
-
-	// Auto-save ke file untuk next time
-	if err := ioutil.WriteFile("cert.pem", certBytes, 0644); err != nil {
-		log.Printf("⚠️  Failed to save certificate to file: %v", err)
-	} else {
-		log.Println("📄 Certificate downloaded and saved to cert.pem")
-	}
-
-	return certificate
+	return ""
 }
