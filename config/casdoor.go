@@ -14,7 +14,7 @@ func InitCasdoor() {
 	clientId := "26054a2dfb593fa0990c"
 	clientSecret := "520986d9f34ddcee617d9dfe6c4e203c97c5bc04"
 	appName := "application_i9irbv"
-	orgName := "skyapps_6gurhn"
+	orgName := "skyapps"
 	redirectURL := "http://localhost:9000/callback"
 
 	// Load certificate
