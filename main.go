@@ -12,16 +12,6 @@ func main() {
 	// Initialize Casdoor
 	config.InitCasdoor()
 
-	// Initialize Casbin
-	if err := config.InitCasbin(); err != nil {
-		panic("Failed to initialize Casbin: " + err.Error())
-	}
-
-	// Sync RBAC from Casdoor
-	if err := config.SyncRBACFromCasdoor(); err != nil {
-		panic("Failed to sync RBAC: " + err.Error())
-	}
-
 	// Setup Echo
 	e := echo.New()
 
@@ -36,30 +26,32 @@ func main() {
 	e.GET("/health", handlers.HealthCheck)
 
 	// Protected routes
-	api := e.Group("/api")
-	api.Use(middleware.AuthRequired())
+	api := e.Group("/api",
+		middleware.CasdoorAuthRequired(),
+		middleware.CasdoorRBAC(),
+	)
 	{
 		// User info
 		api.GET("/me", handlers.GetCurrentUser)
 
 		// User management (requires permission)
-		api.GET("/users", handlers.ListUsers, middleware.EnforcePermission("users", "read"))
-		api.POST("/users", handlers.AddUser, middleware.EnforcePermission("users", "write"))
-		api.PUT("/users/:username", handlers.UpdateUser, middleware.EnforcePermission("users", "write"))
-		api.DELETE("/users/:username", handlers.DeleteUser, middleware.EnforcePermission("users", "delete"))
+		api.GET("/users", handlers.ListUsers)
+		api.POST("/users", handlers.AddUser)
+		api.PUT("/users/:username", handlers.UpdateUser)
+		api.DELETE("/users/:username", handlers.DeleteUser)
 
 		// Role management (admin only)
-		api.GET("/roles", handlers.ListRoles, middleware.EnforcePermission("roles", "read"))
-		api.POST("/roles", handlers.AddRole, middleware.EnforcePermission("roles", "write"))
-		api.PUT("/roles/:role", handlers.UpdateRole, middleware.EnforcePermission("roles", "write"))
-		api.DELETE("/roles/:role", handlers.DeleteRole, middleware.EnforcePermission("roles", "delete"))
+		api.GET("/roles", handlers.ListRoles)
+		api.POST("/roles", handlers.AddRole)
+		api.PUT("/roles/:role", handlers.UpdateRole)
+		api.DELETE("/roles/:role", handlers.DeleteRole)
 
 		// Assign role to user
-		api.POST("/users/:username/roles", handlers.AssignRole, middleware.EnforcePermission("users", "write"))
-		api.DELETE("/users/:username/roles/:role", handlers.RemoveRole, middleware.EnforcePermission("users", "write"))
+		api.POST("/users/:username/roles", handlers.AssignRole)
+		api.DELETE("/users/:username/roles/:role", handlers.RemoveRole)
 
 		// RBAC sync
-		api.POST("/rbac/sync", handlers.SyncRBAC, middleware.EnforcePermission("rbac", "write"))
+		api.POST("/rbac/sync", handlers.SyncRBAC)
 	}
 
 	e.Logger.Fatal(e.Start(":9000"))

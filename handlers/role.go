@@ -146,9 +146,6 @@ func AssignRole(c echo.Context) error {
 		})
 	}
 
-	// Sync RBAC
-	config.SyncRBACFromCasdoor()
-
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "Role assigned successfully",
 	})
@@ -181,20 +178,12 @@ func RemoveRole(c echo.Context) error {
 		})
 	}
 
-	// Sync RBAC
-	config.SyncRBACFromCasdoor()
-
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "Role removed successfully",
 	})
 }
 
 func SyncRBAC(c echo.Context) error {
-	if err := config.SyncRBACFromCasdoor(); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to sync RBAC",
-		})
-	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "RBAC synced successfully",

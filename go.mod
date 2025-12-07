@@ -3,17 +3,13 @@ module github.com/skyapps-id/casdoor-test
 go 1.24.5
 
 require (
-	github.com/casbin/casbin/v2 v2.134.0
 	github.com/casdoor/casdoor-go-sdk v1.39.0
 	github.com/labstack/echo/v4 v4.13.4
 )
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
-	github.com/casbin/govaluate v1.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
