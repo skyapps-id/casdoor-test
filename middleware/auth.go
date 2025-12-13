@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -54,7 +53,7 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 
 			// Ambil dari context
 			resource := c.Request().URL.Path
-			// action := c.Request().Method
+			action := c.Request().Method
 
 			// Normalize path dengan wildcard
 			pathParts := strings.Split(strings.Trim(resource, "/"), "/")
@@ -67,10 +66,8 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 			}
 
 			req := casdoorsdk.CasbinRequest{
-				"skyapps", "admin", "GET", "/api/users", "skyapps", "*",
+				user.Owner, "admin", action, resource, user.Owner, "*",
 			}
-
-			fmt.Println(user.Owner)
 
 			allowed, err := config.CasdoorClient.Enforce(
 				"",                          // permissionId
@@ -83,7 +80,7 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 			if err != nil {
 				return echo.NewHTTPError(500, "RBAC enforcement failed: "+err.Error())
 			}
-			if allowed {
+			if !allowed {
 				return echo.NewHTTPError(403, "Forbidden")
 			}
 
