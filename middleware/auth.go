@@ -46,16 +46,25 @@ func CasdoorAuthRequired() echo.MiddlewareFunc {
 func CasdoorRBAC() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			// 1️⃣ Ambil user dari context
 			user, ok := c.Get("casdoorUser").(*casdoorsdk.User)
-			if !ok {
+			if !ok || user == nil {
 				return echo.NewHTTPError(401, "Unauthorized")
 			}
 
-			// Ambil dari context
-			resource := c.Request().URL.Path
-			action := c.Request().Method
+			// 2️⃣ Ambil role user
+			if len(user.Roles) == 0 {
+				return echo.NewHTTPError(403, "No role assigned")
+			}
 
-			// Normalize path dengan wildcard
+			// (asumsi single role, kalau multi role → loop)
+			role := user.Roles[0].Name
+
+			// 3️⃣ Ambil request info
+			action := c.Request().Method
+			resource := c.Path() // PENTING: pakai path echo, bukan raw URL
+
+			// 4️⃣ Normalize path (id → *)
 			pathParts := strings.Split(strings.Trim(resource, "/"), "/")
 			if len(pathParts) > 2 {
 				lastPart := pathParts[len(pathParts)-1]
@@ -65,21 +74,30 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 				}
 			}
 
+			// 5️⃣ Build Casbin request
 			req := casdoorsdk.CasbinRequest{
-				user.Owner, "admin", action, resource, user.Owner, "*",
+				user.Owner, // subOwner
+				role,       // subName (ROLE)
+				action,     // method
+				resource,   // path
+				user.Owner, // objOwner
+				"*",        // objName
 			}
 
+			// 6️⃣ Enforce RBAC
 			allowed, err := config.CasdoorClient.Enforce(
-				"",                          // permissionId
-				"",                          // modelId
-				"",                          // resourceId
-				user.Owner+"/rbac-enforcer", // enforcerId
-				"",                          // owner - kosongkan karena sudah ada di permissionId
+				"",
+				"",
+				"",
+				user.Owner+"/rbac-enforcer",
+				"",
 				req,
 			)
 			if err != nil {
 				return echo.NewHTTPError(500, "RBAC enforcement failed: "+err.Error())
 			}
+
+			// 7️⃣ Deny kalau tidak allowed
 			if !allowed {
 				return echo.NewHTTPError(403, "Forbidden")
 			}
