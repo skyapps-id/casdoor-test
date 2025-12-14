@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"os"
 	"strconv"
 	"strings"
 
@@ -76,12 +77,12 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 
 			// 5️⃣ Build Casbin request
 			req := casdoorsdk.CasbinRequest{
-				user.Owner, // subOwner
-				role,       // subName (ROLE)
-				action,     // method
-				resource,   // path
-				user.Owner, // objOwner
-				"*",        // objName
+				getEnv("APP_NAME", ""), // subOwner
+				role,                   // subName (ROLE)
+				action,                 // method
+				resource,               // path
+				user.Owner,             // objOwner
+				"*",                    // objName
 			}
 
 			// 6️⃣ Enforce RBAC
@@ -105,4 +106,11 @@ func CasdoorRBAC() echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

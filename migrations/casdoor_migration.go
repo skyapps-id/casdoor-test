@@ -384,7 +384,7 @@ func (m *CasdoorMigration) MigratePolicies() error {
 	for _, policy := range policies {
 		rule := &casdoorsdk.CasbinRule{
 			Ptype: "p",
-			V0:    owner,           // subOwner
+			V0:    "web-apps",      // subOwner
 			V1:    policy.Role,     // subName
 			V2:    policy.Action,   // method
 			V3:    policy.Resource, // urlPath
@@ -429,9 +429,9 @@ func (m *CasdoorMigration) Run() error {
 	}
 
 	// Step 4: Create Permissions
-	if err := m.MigratePermissions(); err != nil {
-		return fmt.Errorf("permission migration failed: %v", err)
-	}
+	// if err := m.MigratePermissions(); err != nil {
+	// 	return fmt.Errorf("permission migration failed: %v", err)
+	// }
 
 	// Step 5: Create Enforcer
 	if err := m.MigrateEnforcer(); err != nil {
